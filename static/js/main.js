@@ -225,9 +225,9 @@ function renderFeed() {
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
         </a>
         <div class="card-action-buttons">
-          <button class="btn-copy-card" data-id="${note.id}" aria-label="Copier le texte de la mise à jour">
+          <button class="btn-copy-card" data-id="${note.id}" aria-label="Copy update text">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
-            Copier
+            Copy
           </button>
           <button class="btn-tweet" data-id="${note.id}">
             <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
@@ -335,10 +335,10 @@ async function copyCardText(note) {
   try {
     const formattedText = `BigQuery Release [${note.date}] - ${note.type}:\n${note.content_text}\n\nLink: ${note.link}`;
     await navigator.clipboard.writeText(formattedText);
-    showToast('Mise à jour copiée dans le presse-papier !');
+    showToast('Update content copied to clipboard!');
   } catch (err) {
     console.error('Failed to copy card text:', err);
-    showToast('Échec de la copie du contenu.');
+    showToast('Failed to copy update content.');
   }
 }
 
@@ -376,10 +376,10 @@ function exportAllToCSV() {
     link.click();
     document.body.removeChild(link);
     
-    showToast('Toutes les données ont été exportées en CSV !');
+    showToast('All data successfully exported to CSV!');
   } catch (err) {
     console.error('Failed to export CSV:', err);
-    showToast("Échec de l'exportation CSV.");
+    showToast('Failed to export CSV file.');
   }
 }
 
@@ -396,7 +396,7 @@ function toggleTheme() {
   document.body.setAttribute('data-theme', newTheme);
   localStorage.setItem('theme', newTheme);
   updateThemeIcon(newTheme);
-  showToast(`Mode ${newTheme === 'dark' ? 'sombre' : 'clair'} activé !`);
+  showToast(`Theme switched to ${newTheme} mode!`);
 }
 
 function updateThemeIcon(theme) {
@@ -446,7 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnExportCsv) {
     btnExportCsv.addEventListener('click', () => {
       if (allNotes.length === 0) {
-        showToast('Aucune donnée à exporter.');
+        showToast('No data available to export.');
         return;
       }
       exportAllToCSV();
