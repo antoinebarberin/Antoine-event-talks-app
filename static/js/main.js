@@ -224,15 +224,22 @@ function renderFeed() {
           Official Release Notes
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
         </a>
-        <button class="btn-tweet" data-id="${note.id}">
-          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-          Tweet
-        </button>
+        <div class="card-action-buttons">
+          <button class="btn-copy-card" data-id="${note.id}" aria-label="Copier le texte de la mise à jour">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+            Copier
+          </button>
+          <button class="btn-tweet" data-id="${note.id}">
+            <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            Tweet
+          </button>
+        </div>
       </div>
     `;
     
-    // Attach listener for the Tweet button
+    // Attach listeners
     card.querySelector('.btn-tweet').addEventListener('click', () => openTweetModal(note));
+    card.querySelector('.btn-copy-card').addEventListener('click', () => copyCardText(note));
     
     feedGrid.appendChild(card);
   });
@@ -323,6 +330,59 @@ function updateCharCount() {
   btnConfirmTweet.disabled = currentLength > 280 || currentLength === 0;
 }
 
+// Copy card content text to clipboard
+async function copyCardText(note) {
+  try {
+    const formattedText = `BigQuery Release [${note.date}] - ${note.type}:\n${note.content_text}\n\nLink: ${note.link}`;
+    await navigator.clipboard.writeText(formattedText);
+    showToast('Mise à jour copiée dans le presse-papier !');
+  } catch (err) {
+    console.error('Failed to copy card text:', err);
+    showToast('Échec de la copie du contenu.');
+  }
+}
+
+// Export all release notes to CSV file
+function exportAllToCSV() {
+  try {
+    const headers = ['ID', 'Date', 'Type', 'Content Text', 'Official Link', 'Timestamp'];
+    const rows = allNotes.map(note => [
+      note.id,
+      note.date,
+      note.type,
+      note.content_text,
+      note.link,
+      note.timestamp
+    ]);
+    
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(val => {
+        const cleanVal = String(val || '').replace(/"/g, '""');
+        return `"${cleanVal}"`;
+      }).join(','))
+    ].join('\n');
+    
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    const currentDate = new Date().toISOString().split('T')[0];
+    link.setAttribute('download', `bigquery_release_notes_${currentDate}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showToast('Toutes les données ont été exportées en CSV !');
+  } catch (err) {
+    console.error('Failed to export CSV:', err);
+    showToast("Échec de l'exportation CSV.");
+  }
+}
+
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
   // Initial load
@@ -332,6 +392,18 @@ document.addEventListener('DOMContentLoaded', () => {
   btnRefresh.addEventListener('click', () => {
     fetchReleaseNotes(true);
   });
+
+  // Export CSV button action
+  const btnExportCsv = document.getElementById('btn-export-csv');
+  if (btnExportCsv) {
+    btnExportCsv.addEventListener('click', () => {
+      if (allNotes.length === 0) {
+        showToast('Aucune donnée à exporter.');
+        return;
+      }
+      exportAllToCSV();
+    });
+  }
   
   // Search input filter
   searchInput.addEventListener('input', (e) => {
